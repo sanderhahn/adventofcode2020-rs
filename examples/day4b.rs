@@ -1,6 +1,66 @@
 use std::{
-    collections::HashMap, collections::HashSet, fs::File, io::BufRead, io::BufReader, io::Error,
+    collections::HashMap, fs::File, io::BufRead, io::BufReader, io::Error, ops::RangeInclusive,
 };
+
+fn between(value: &str, range: RangeInclusive<usize>) -> bool {
+    let value = value.parse::<usize>().ok().unwrap_or_default();
+    range.contains(&value)
+}
+
+fn check_height(value: &str) -> bool {
+    if value.len() < 2 {
+        return false;
+    }
+    let (num, suffix) = value.split_at(value.len() - 2);
+    let num = num.parse::<usize>().unwrap_or(0);
+    let range = match suffix {
+        "cm" => 150..=193,
+        "in" => 59..=76,
+        _ => return false,
+    };
+    range.contains(&num)
+}
+
+fn check_hair_color(value: &str) -> bool {
+    if value.len() != 7 {
+        return false;
+    }
+    let value: &[u8] = value.as_bytes();
+    let valid = value[1..]
+        .into_iter()
+        .fold(true, |acc, b| acc && matches!(b, b'0'..=b'9' | b'a'..=b'f'));
+    value[0] == b'#' && valid
+}
+
+fn check_eye_color(value: &str) -> bool {
+    let valid: Vec<&str> = "amb blu brn gry grn hzl oth".split_whitespace().collect();
+    valid.contains(&value)
+}
+
+fn check_passport_id(value: &str) -> bool {
+    if value.len() != 9 {
+        return false;
+    }
+    let value: &[u8] = value.as_bytes();
+    let valid = value[1..]
+        .into_iter()
+        .fold(true, |acc, b| acc && matches!(*b, b'0'..=b'9'));
+    valid
+}
+
+fn validate(key: &str, value: &str) -> bool {
+    match key {
+        "byr" => between(value, 1920..=2002),
+        "iyr" => between(value, 2010..=2020),
+        "eyr" => between(value, 2020..=2030),
+        "hgt" => check_height(value),
+        "hcl" => check_hair_color(value),
+        "ecl" => check_eye_color(value),
+        "pid" => check_passport_id(value),
+        "cid" => true,
+        _ => false,
+    }
+}
 
 struct Row {
     map: HashMap<String, String>,
@@ -24,92 +84,14 @@ impl Row {
         self.map.clear()
     }
 
-    fn between(&self, name: &str, low: usize, high: usize) -> bool {
-        if let Some(value) = self.map.get(name) {
-            if let Ok(value) = value.parse::<usize>() {
-                value >= low && value <= high
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
-    fn check_height(&self) -> bool {
-        if let Some(value) = self.map.get("hgt") {
-            let cm = value.ends_with("cm");
-            let inch = value.ends_with("in");
-            if let Ok(value) = value[..value.len() - 2].parse::<usize>() {
-                if cm {
-                    value >= 150 && value <= 193
-                } else if inch {
-                    value >= 59 && value <= 76
-                } else {
-                    false
-                }
-            } else {
-                false
-            }
-        } else {
-            false
-        }
-    }
-
-    fn check_hair_color(&self) -> bool {
-        if let Some(value) = self.map.get("hcl") {
-            let value: &[u8] = value.as_bytes();
-            let valid = value[1..]
-                .into_iter()
-                .fold(true, |acc, b| acc && matches!(b, b'0'..=b'9' | b'a'..=b'f'));
-            value[0] == b'#' && value.len() == 7 && valid
-        } else {
-            false
-        }
-    }
-
-    fn check_eye_color(&self) -> bool {
-        let valid: Vec<String> = "amb blu brn gry grn hzl oth"
-            .split_whitespace()
-            .map(String::from)
-            .collect();
-        if let Some(value) = self.map.get("ecl") {
-            valid.contains(value)
-        } else {
-            false
-        }
-    }
-
-    fn check_passport_id(&self) -> bool {
-        if let Some(value) = self.map.get("pid") {
-            let value: &[u8] = value.as_bytes();
-            let valid = value[1..]
-                .into_iter()
-                .fold(true, |acc, b| acc && matches!(*b, b'0'..=b'9'));
-            value.len() == 9 && valid
-        } else {
-            false
-        }
-    }
-
     fn check(&self) -> bool {
-        let valid_keys: Vec<String> = "ecl pid eyr hcl byr iyr cid hgt"
-            .split_whitespace()
-            .map(String::from)
-            .collect();
-        let mut valid_keys: HashSet<String> = valid_keys.into_iter().collect();
-        valid_keys.remove("cid");
-        let mut keys: HashSet<String> = self.map.keys().cloned().collect();
-        keys.remove("cid");
-
-        self.between("byr", 1920, 2002)
-            && self.between("iyr", 2010, 2020)
-            && self.between("eyr", 2020, 2030)
-            && self.check_height()
-            && self.check_hair_color()
-            && self.check_eye_color()
-            && self.check_passport_id()
-            && keys == valid_keys
+        let keys = vec!["byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid", "cid"];
+        for key in keys {
+            if !validate(key, self.map.get(key).unwrap_or(&"".to_string())) {
+                return false;
+            }
+        }
+        return true;
     }
 }
 
