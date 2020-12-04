@@ -5,7 +5,7 @@ use std::{
 
 fn main() -> Result<(), std::io::Error> {
     let mut valid = 0;
-    let file = File::open("day2.txt")?;
+    let file = File::open("inputs/day2.txt")?;
     let lines = io::BufReader::new(file).lines().map(|line| line.unwrap());
     for line in lines {
         let parts: Vec<&str> = line.split_whitespace().collect();

@@ -40,7 +40,7 @@ impl Map {
 }
 
 fn main() -> Result<(), std::io::Error> {
-    let file = File::open("day3.txt")?;
+    let file = File::open("inputs/day3.txt")?;
     let lines = BufReader::new(file).lines().map(|line| line.unwrap());
     let map = Map::new(lines.collect());
     println!("{}", map.count_slope((3, 1)));

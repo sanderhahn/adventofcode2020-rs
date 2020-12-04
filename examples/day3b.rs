@@ -40,7 +40,7 @@ impl Map {
 }
 
 fn main() -> Result<(), std::io::Error> {
-    let file = File::open("day3.txt")?;
+    let file = File::open("inputs/day3.txt")?;
     let lines = BufReader::new(file).lines().map(|line| line.unwrap());
     let map = Map::new(lines.collect());
     let slopes = vec![(1, 1), (3, 1), (5, 1), (7, 1), (1, 2)];

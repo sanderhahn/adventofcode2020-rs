@@ -17,7 +17,7 @@ fn check(map: &HashMap<String, String>) -> bool {
 }
 
 fn main() -> Result<(), Error> {
-    let file = File::open("day4.txt")?;
+    let file = File::open("inputs/day4.txt")?;
     let lines = BufReader::new(file).lines().map(|line| line.unwrap());
     let lines: Vec<String> = lines.collect();
     let mut valid = 0;
