@@ -39,5 +39,7 @@ fn main() -> Result<(), Error> {
     expect("day3b", "1592662500")?;
     expect("day4a", "190")?;
     expect("day4b", "121")?;
+    expect("day5a", "864")?;
+    expect("day5b", "739")?;
     Ok(())
 }

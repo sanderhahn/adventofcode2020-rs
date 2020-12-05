@@ -1,9 +1,9 @@
-use std::{cmp::max, fs::File, io::BufRead, io::BufReader, io::Error};
+use std::{fs::File, io::BufRead, io::BufReader, io::Error};
 
 fn parse_num(str: &str) -> u32 {
     let mut num = 0;
     for c in str.chars() {
-        num = num << 1;
+        num <<= 1;
         num |= match c {
             'F' => 0,
             'B' => 1,
@@ -24,10 +24,7 @@ fn main() -> Result<(), Error> {
     assert_eq!(parse_num("FFFBBBFRRR"), 119);
     assert_eq!(parse_num("BBFFBBFRLL"), 820);
 
-    let highest = lines.fold(0, |highest, line| {
-        let num = parse_num(&line);
-        max(highest, num)
-    });
+    let highest = lines.map(|line| parse_num(&line)).fold(0, |a, b| a.max(b));
     println!("{}", highest);
     Ok(())
 }

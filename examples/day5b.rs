@@ -3,7 +3,7 @@ use std::{fs::File, io::BufRead, io::BufReader, io::Error};
 fn parse_num(str: &str) -> u32 {
     let mut num = 0;
     for c in str.chars() {
-        num = num << 1;
+        num <<= 1;
         num |= match c {
             'F' => 0,
             'B' => 1,
