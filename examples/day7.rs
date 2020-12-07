@@ -1,6 +1,6 @@
 use std::collections::{HashMap, HashSet};
 
-type DepGraph = HashMap<String, Vec<(u32, String)>>;
+type DepGraph = HashMap<String, Vec<(usize, String)>>;
 
 fn parse_input(input: &str) -> DepGraph {
     let lines = input.lines();
@@ -17,7 +17,7 @@ fn parse_input(input: &str) -> DepGraph {
                 if let &[num, bag] = &v[..] {
                     let bag = bag.trim_end_matches(" bag").trim_end_matches(" bags");
                     if num != "no" {
-                        let num: u32 = num.parse().unwrap();
+                        let num = num.parse().unwrap();
                         if num > 0 {
                             vec.push((num, bag.into()));
                         }
@@ -68,7 +68,7 @@ fn day7a(input: &str) -> usize {
     set.len()
 }
 
-fn count(bag: &str, deps: &DepGraph) -> u32 {
+fn count(bag: &str, deps: &DepGraph) -> usize {
     let mut total = 1;
     if let Some(contains) = deps.get(bag) {
         for (num, bag) in contains {
@@ -78,7 +78,7 @@ fn count(bag: &str, deps: &DepGraph) -> u32 {
     total
 }
 
-fn day7b(input: &str) -> u32 {
+fn day7b(input: &str) -> usize {
     let deps = parse_input(input);
     count("shiny gold", &deps) - 1
 }
@@ -110,7 +110,6 @@ dark green bags contain 2 dark blue bags.
 dark blue bags contain 2 dark violet bags.
 dark violet bags contain no other bags.
 ";
-
     assert_eq!(126, day7b(example));
 
     println!("{}", day7b(input));
