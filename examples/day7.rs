@@ -2,23 +2,26 @@ use std::collections::{HashMap, HashSet};
 
 type DepGraph = HashMap<String, Vec<(usize, String)>>;
 
+fn trim_suffix(bag: &str) -> &str {
+    bag.trim_end_matches(" bag").trim_end_matches(" bags")
+}
+
 fn parse_input(input: &str) -> DepGraph {
     let lines = input.lines();
     let mut deps: DepGraph = HashMap::new();
     for line in lines {
         let v: Vec<&str> = line.splitn(2, " bags contain ").collect();
         if let &[container, contains] = &v[..] {
-            let container = container.trim_end_matches(" bag").trim_end_matches(" bags");
+            let container = trim_suffix(container);
             let contains = contains.trim_end_matches(".");
-            let contents = contains.split(", ");
             let mut vec = vec![];
-            for content in contents {
+            for content in contains.split(", ") {
                 let v: Vec<&str> = content.splitn(2, " ").collect();
                 if let &[num, bag] = &v[..] {
-                    let bag = bag.trim_end_matches(" bag").trim_end_matches(" bags");
                     if num != "no" {
                         let num = num.parse().unwrap();
                         if num > 0 {
+                            let bag = trim_suffix(bag);
                             vec.push((num, bag.into()));
                         }
                     }
