@@ -1,28 +1,5 @@
 use std::collections::HashSet;
 
-fn mutate(prog: Vec<(&str, isize)>) -> Vec<Vec<(&str, isize)>> {
-    let mut all = vec![];
-    for (i, (op, _)) in prog.iter().enumerate() {
-        match *op {
-            "nop" => {
-                let mut more = prog.clone();
-                more[i].0 = "jmp";
-                all.push(more);
-            },
-            "jmp" => {
-                let mut more = prog.clone();
-                more[i].0 = "nop";
-                all.push(more);
-            },
-            "acc" => {},
-            _ => {
-                panic!("error");
-            }
-        }
-    }
-    all
-}
-
 fn parse(input: &str) -> Vec<(&str, isize)> {
     let prog: Vec<(&str, isize)> = input
         .lines()
@@ -42,22 +19,21 @@ fn run(prog: &Vec<(&str, isize)>) -> Result<isize, isize> {
     let mut pc = 0;
     while pc < prog.len() {
         if executed.contains(&pc) {
-            return Err(acc)
+            return Err(acc);
         }
         let op = prog[pc];
         executed.insert(pc);
-        match op.0 {
-            "acc" => {
-                acc += op.1;
+        match op {
+            ("acc", incr) => {
+                acc += incr;
             }
-            "jmp" => {
-                let npc = (pc as isize) + op.1 - 1;
+            ("jmp", jmp) => {
+                let npc = (pc as isize) + jmp - 1;
                 if npc >= 0 {
                     pc = npc as usize;
                 }
             }
-            "nop" => {
-            }
+            ("nop", _) => {}
             _ => {
                 panic!("invalid op");
             }
@@ -71,12 +47,35 @@ fn day8a(input: &str) -> isize {
     run(&parse(input)).unwrap_err()
 }
 
+fn mutate(prog: Vec<(&str, isize)>) -> Vec<Vec<(&str, isize)>> {
+    let mut all = vec![];
+    for (i, op) in prog.iter().enumerate() {
+        match *op {
+            ("nop", arg) => {
+                let mut more = prog.clone();
+                more[i] = ("jmp", arg);
+                all.push(more);
+            }
+            ("jmp", arg) => {
+                let mut more = prog.clone();
+                more[i] = ("nop", arg);
+                all.push(more);
+            }
+            ("acc", _) => {}
+            _ => {
+                panic!("error");
+            }
+        }
+    }
+    all
+}
+
 fn day8b(input: &str) -> isize {
     let prog = parse(input);
     let mutations = mutate(prog);
     for mutation in mutations {
         if let Ok(result) = run(&mutation) {
-            return result
+            return result;
         }
     }
     panic!("error");
