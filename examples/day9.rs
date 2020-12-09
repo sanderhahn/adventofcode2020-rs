@@ -24,12 +24,12 @@ fn day9a(input: &str, preamble: usize) -> usize {
     panic!("error");
 }
 
-fn find_range(invalid: usize, numbers: &[usize]) -> usize {
-    for start in 0..numbers.len() {
-        for end in start..numbers.len() {
-            let sum: usize = numbers[start..=end].iter().sum();
+fn find_range(invalid: usize, numbers: Vec<usize>) -> usize {
+    for size in 2..numbers.len() {
+        for numbers in numbers.windows(size) {
+            let sum: usize = numbers.iter().sum();
             if sum == invalid {
-                let mut range: Vec<usize> = numbers[start..=end].iter().cloned().collect();
+                let mut range: Vec<usize> = numbers.iter().cloned().collect();
                 range.sort();
                 return range.first().unwrap() + range.last().unwrap();
             }
@@ -41,7 +41,7 @@ fn find_range(invalid: usize, numbers: &[usize]) -> usize {
 fn day9b(input: &str, preamble: usize) -> usize {
     let invalid = day9a(input, preamble);
     let numbers = parse(input);
-    find_range(invalid, &numbers)
+    find_range(invalid, numbers)
 }
 
 fn main() {
