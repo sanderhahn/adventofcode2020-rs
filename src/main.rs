@@ -13,7 +13,7 @@ impl Error {
 
 fn run(day: &str) -> String {
     let output = Command::new("cargo")
-        .args(&["run", "--example", day])
+        .args(&["run", "--example", day, "--release"])
         .output()
         .unwrap()
         .stdout;
