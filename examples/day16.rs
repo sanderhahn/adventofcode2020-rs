@@ -1,13 +1,17 @@
-fn parse_ranges(input: &str) -> Vec<(String, Vec<(usize, usize)>)> {
+use std::ops::RangeInclusive;
+
+type Ranges = Vec<(String, Vec<RangeInclusive<usize>>)>;
+
+fn parse_ranges(input: &str) -> Ranges {
     let mut named_ranges = vec![];
     for range in input.lines() {
         let colon = range.find(": ").unwrap();
         let name = &range[0..colon];
-        let range: Vec<(usize, usize)> = range[colon + 2..]
+        let range: Vec<RangeInclusive<usize>> = range[colon + 2..]
             .split(" or ")
             .map(|range| {
                 let range: Vec<usize> = range.split("-").map(|num| num.parse().unwrap()).collect();
-                (range[0], range[1])
+                range[0]..=range[1]
             })
             .collect();
         named_ranges.push((name.to_string(), range));
@@ -26,16 +30,30 @@ fn parse_tickets(input: &str) -> Vec<Vec<usize>> {
         .collect()
 }
 
+fn parse(
+    input: &str,
+) -> (
+    Ranges,
+    Vec<usize>,
+    Vec<Vec<usize>>,
+) {
+    let parts: Vec<&str> = input.split("\n\n").collect();
+    let named_ranges = parse_ranges(parts[0]);
+    let my_tickets = parse_tickets(parts[1]);
+    let nearby_tickets = parse_tickets(parts[2]);
+    (named_ranges, my_tickets[0].clone(), nearby_tickets)
+}
+
 fn ticket_options(
     ticket: &Vec<usize>,
-    named_ranges: &Vec<(String, Vec<(usize, usize)>)>,
+    named_ranges: &Ranges,
 ) -> Vec<Vec<String>> {
     let mut options = vec![];
     for (index, &number) in ticket.iter().enumerate() {
         options.push(vec![]);
         for (name, ranges) in named_ranges {
             let valid = ranges.iter().fold(false, |acc, range| {
-                acc || (number >= range.0 && number <= range.1)
+                acc || range.contains(&number)
             });
             if valid {
                 options.get_mut(index).unwrap().push(name.into());
@@ -46,9 +64,7 @@ fn ticket_options(
 }
 
 fn day16a(input: &str) -> usize {
-    let parts: Vec<&str> = input.split("\n\n").collect();
-    let named_ranges = parse_ranges(parts[0]);
-    let nearby_tickets = parse_tickets(parts[2]);
+    let (named_ranges, _, nearby_tickets) = parse(input);
 
     let mut errors = 0;
     for ticket in nearby_tickets {
@@ -104,10 +120,7 @@ fn minimize_options(all_options: Vec<Vec<String>>) -> Vec<String> {
 }
 
 fn day16b(input: &str) -> Vec<(String, usize)> {
-    let parts: Vec<&str> = input.split("\n\n").collect();
-    let named_ranges = parse_ranges(parts[0]);
-    let nearby_tickets = parse_tickets(parts[2]);
-    let my_ticket = &parse_tickets(parts[1])[0];
+    let (named_ranges, my_ticket, nearby_tickets) = parse(input);
 
     let mut all_options: Vec<Vec<String>> = vec![vec![]; named_ranges.len()];
     'ticket: for ticket in nearby_tickets {
@@ -132,14 +145,11 @@ fn day16b(input: &str) -> Vec<(String, usize)> {
 }
 
 fn day16b_final(input: &str) -> usize {
-    let solution = day16b(input);
-    solution.iter().fold(1, |acc, (name, value)| {
-        if name.starts_with("departure") {
-            acc * value
-        } else {
-            acc
-        }
-    })
+    day16b(input)
+        .iter()
+        .filter(|(name, _)| name.starts_with("departure"))
+        .map(|(_, value)| value)
+        .product()
 }
 
 fn main() {
