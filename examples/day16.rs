@@ -1,6 +1,7 @@
 use std::ops::RangeInclusive;
 
-type Ranges = Vec<(String, Vec<RangeInclusive<usize>>)>;
+type Ranges<'s> = Vec<(&'s str, Vec<RangeInclusive<usize>>)>;
+type Tickets = Vec<Vec<String>>;
 
 fn parse_ranges(input: &str) -> Ranges {
     let mut named_ranges = vec![];
@@ -14,7 +15,7 @@ fn parse_ranges(input: &str) -> Ranges {
                 range[0]..=range[1]
             })
             .collect();
-        named_ranges.push((name.to_string(), range));
+        named_ranges.push((name, range));
     }
     named_ranges
 }
@@ -30,13 +31,7 @@ fn parse_tickets(input: &str) -> Vec<Vec<usize>> {
         .collect()
 }
 
-fn parse(
-    input: &str,
-) -> (
-    Ranges,
-    Vec<usize>,
-    Vec<Vec<usize>>,
-) {
+fn parse(input: &str) -> (Ranges, Vec<usize>, Vec<Vec<usize>>) {
     let parts: Vec<&str> = input.split("\n\n").collect();
     let named_ranges = parse_ranges(parts[0]);
     let my_tickets = parse_tickets(parts[1]);
@@ -44,19 +39,16 @@ fn parse(
     (named_ranges, my_tickets[0].clone(), nearby_tickets)
 }
 
-fn ticket_options(
-    ticket: &Vec<usize>,
-    named_ranges: &Ranges,
-) -> Vec<Vec<String>> {
+fn ticket_options(ticket: &Vec<usize>, named_ranges: &Ranges) -> Tickets {
     let mut options = vec![];
     for (index, &number) in ticket.iter().enumerate() {
         options.push(vec![]);
         for (name, ranges) in named_ranges {
-            let valid = ranges.iter().fold(false, |acc, range| {
-                acc || range.contains(&number)
-            });
+            let valid = ranges
+                .iter()
+                .fold(false, |acc, range| acc || range.contains(&number));
             if valid {
-                options.get_mut(index).unwrap().push(name.into());
+                options.get_mut(index).unwrap().push(name.to_string());
             }
         }
     }
@@ -87,7 +79,7 @@ fn solution_contains(option: &String, solution: &Vec<(usize, String)>) -> bool {
     false
 }
 
-fn minimize_options(all_options: Vec<Vec<String>>) -> Vec<String> {
+fn minimize_options(all_options: Tickets) -> Vec<String> {
     let mut all_options: Vec<(usize, Vec<String>)> = all_options.into_iter().enumerate().collect();
     all_options.sort_by_key(|item| item.1.len());
 
@@ -107,7 +99,7 @@ fn minimize_options(all_options: Vec<Vec<String>>) -> Vec<String> {
         solutions = new_solutions;
     }
 
-    let solutions: Vec<Vec<String>> = solutions
+    let solutions: Tickets = solutions
         .iter()
         .map(|solution| {
             let mut solution = solution.clone();
@@ -122,7 +114,7 @@ fn minimize_options(all_options: Vec<Vec<String>>) -> Vec<String> {
 fn day16b(input: &str) -> Vec<(String, usize)> {
     let (named_ranges, my_ticket, nearby_tickets) = parse(input);
 
-    let mut all_options: Vec<Vec<String>> = vec![vec![]; named_ranges.len()];
+    let mut all_options: Tickets = vec![vec![]; named_ranges.len()];
     'ticket: for ticket in nearby_tickets {
         let options = ticket_options(&ticket, &named_ranges);
         for field_options in &options {
