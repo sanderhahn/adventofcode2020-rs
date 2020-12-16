@@ -89,7 +89,7 @@ fn solution_contains(option: &String, solution: &Vec<(usize, String)>) -> bool {
 
 fn minimize_options(all_options: Vec<Vec<String>>) -> Vec<String> {
     let mut all_options: Vec<(usize, Vec<String>)> = all_options.into_iter().enumerate().collect();
-    all_options.sort_by(|a, b| a.1.len().cmp(&b.1.len()));
+    all_options.sort_by_key(|item| item.1.len());
 
     let mut solutions: Vec<Vec<(usize, String)>> = vec![vec![]];
     for (index, options) in all_options {
@@ -111,7 +111,7 @@ fn minimize_options(all_options: Vec<Vec<String>>) -> Vec<String> {
         .iter()
         .map(|solution| {
             let mut solution = solution.clone();
-            solution.sort_by(|a, b| a.0.cmp(&b.0));
+            solution.sort_by_key(|item| item.0);
             solution.iter().map(|(_, name)| name.clone()).collect()
         })
         .collect();
