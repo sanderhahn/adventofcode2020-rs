@@ -54,5 +54,6 @@ fn main() -> Result<(), Error> {
     expect("day15", "421\n436")?;
     expect("day16", "29019\n517827547723")?;
     expect("day17", "313\n2640")?;
+    expect("day18", "8298263963837\n145575710203332")?;
     Ok(())
 }
