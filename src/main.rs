@@ -58,6 +58,6 @@ fn main() -> Result<(), Error> {
     expect("day19", "285\n412")?;
     expect("day21", "2573\nbjpkhx,nsnqf,snhph,zmfqpn,qrbnjtj,dbhfd,thn,sthnsg")?;
     expect("day22", "32495\n32665")?;
-    expect("day23", "49725386\n538935646702")?;
+    expect("day23alt", "49725386\n538935646702")?;
     Ok(())
 }
