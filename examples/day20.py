@@ -105,8 +105,8 @@ def number_of_neighbors(x, y, width):
     in_center = x > 0 and y > 0 and x < width - 1 and y < width - 1
     if in_center:
         return 4
-    in_corner = (x == 0 and y == 0) or (x == width - 1 and y == 0) or (x ==
-                                                                       0 and y == width - 1) or (x == width - 1 and y == width - 1)
+    in_corner = (x == 0 and y == 0) or (x == width - 1 and y == 0)
+    in_corner = in_corner or (x == 0 and y == width - 1) or (x == width - 1 and y == width - 1)
     if in_corner:
         return 2
     return 3
