@@ -164,15 +164,11 @@ for i in range(3, cantor(width, width)):
     n = pick_neighbors(x, y, width)
     place(x, y, n)
 
-# flip grid over diagonal axis
 
-
-def flip_grid():
-    global grid
+def flip_grid(grid):
+    "flip grid over diagonal axis"
     return [[grid[x][y] for (x, _) in enumerate(grid)] for (y, _) in enumerate(grid)]
 
-
-print_grid(grid)
 
 top = 0
 right = 1
@@ -187,8 +183,6 @@ def match_vertically(one, two):
 
 
 def match_horizontally(one, two):
-    print("one", one)
-    print("two", two)
     one = get_sides(one)
     two = get_sides(two)
     return one[right] == two[left]
@@ -199,9 +193,7 @@ def solve_bottom(top, bottom):
         for _ in range(4):
             if match_vertically(top, bottom):
                 return True
-            print("rotate bottom")
             rotate_tile(bottom)
-        print("flip bottom")
         flip_tile(bottom)
     return False
 
@@ -211,9 +203,7 @@ def solve_right(left, right):
         for _ in range(4):
             if match_horizontally(left, right):
                 return True
-            print("rotate right")
             rotate_tile(right)
-        print("flip right")
         flip_tile(right)
     return False
 
@@ -223,8 +213,6 @@ def solve_grid():
         x, y = cantor_unpair(i)
         if x >= width or y >= width:
             continue
-        print(x, y)
-        print(grid[y][x])
         if y > 0 and not solve_bottom(grid[y-1][x], grid[y][x]):
             return False
         if x > 0 and not solve_right(grid[y][x-1], grid[y][x]):
@@ -232,8 +220,7 @@ def solve_grid():
     return True
 
 
-def solve():
-    global start
+def solve(start, grid):
     for _ in range(2):
         bottom = grid[1][0]
         right = grid[0][1]
@@ -241,16 +228,13 @@ def solve():
             for _ in range(4):
                 if solve_grid():
                     return True
-                print("rotate start")
                 rotate_tile(start)
-            print("flip start")
             flip_tile(start)
-        print("flip grid")
-        flip_grid()
+        grid = flip_grid(grid)
     return False
 
 
-if not solve():
+if not solve(start, grid):
     raise Exception('failed to solve')
 
 
@@ -266,7 +250,7 @@ def stitch_row(row):
     return combined
 
 
-def stitch_grid():
+def stitch_grid(grid):
     stitched = [stitch_row(row) for row in grid]
     stitched = [item for sublist in stitched for item in sublist]
     return stitched
@@ -278,6 +262,82 @@ def strip_tiles():
 
 
 strip_tiles()
+area = stitch_grid(grid)
 
-for line in stitch_grid():
-    print(line)
+
+def print_area(area):
+    for line in area:
+        print(line)
+    print()
+
+
+monster = [
+    "                  # ",
+    "#    ##    ##    ###",
+    " #  #  #  #  #  #   ",
+]
+
+
+def compile_monster(monster):
+    marks = []
+    for (y, line) in enumerate(monster):
+        for (x, char) in enumerate(line):
+            if char == "#":
+                marks.append((x, y))
+    return ((len(monster[0]), len(monster)), marks)
+
+
+monster = compile_monster(monster)
+
+
+def check_monster(monster, area, x, y):
+    for (mx, my) in monster[1]:
+        if area[y+my][x+mx] != '#':
+            return False
+    return True
+
+
+def find_monster(monster, area):
+    width = len(area[0])
+    height = len(area)
+    count = 0
+    for x in range(0, width - monster[0][0]):
+        for y in range(0, width - monster[0][1]):
+            if check_monster(monster, area, x, y):
+                count += 1
+    return count
+
+
+def rotate_area(area):
+    "rotate clockwise"
+    return ["".join([line[i] for line in area])[::-1] for (i, _) in enumerate(area)]
+
+
+def flip_area(area):
+    "flip over the diagonal axis"
+    return ["".join([line[i] for line in area]) for (i, _) in enumerate(area)]
+
+
+def search_area(monster, area):
+    for _ in range(2):
+        for _ in range(4):
+            count = find_monster(monster, area)
+            if count > 0:
+                return count
+            area = rotate_area(area)
+        area = flip_area(area)
+
+
+def count_waves(area):
+    waves = 0
+    for line in area:
+        for char in line:
+            if char == '#':
+                waves += 1
+    return waves
+
+
+found_monsters = search_area(monster, area)
+monster_marks = found_monsters * len(monster[1])
+waves = count_waves(area) - monster_marks
+print(waves)
