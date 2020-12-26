@@ -31,21 +31,21 @@ fn expect(day: &str, expected: &str) -> Result<(), Error> {
 }
 
 fn main() -> Result<(), Error> {
-    expect("day1a", "838624")?;
-    expect("day1b", "52764180")?;
-    expect("day2a", "536")?;
-    expect("day2b", "558")?;
-    expect("day3a", "250")?;
-    expect("day3b", "1592662500")?;
-    expect("day4a", "190")?;
-    expect("day4b", "121")?;
-    expect("day5a", "864")?;
-    expect("day5b", "739")?;
-    expect("day6a", "6703")?;
-    expect("day6b", "3430")?;
-    expect("day7", "261\n3765")?;
-    expect("day8", "1818\n631")?;
-    expect("day9", "731031916\n93396727")?;
+    expect("day01a", "838624")?;
+    expect("day01b", "52764180")?;
+    expect("day02a", "536")?;
+    expect("day02b", "558")?;
+    expect("day03a", "250")?;
+    expect("day03b", "1592662500")?;
+    expect("day04a", "190")?;
+    expect("day04b", "121")?;
+    expect("day05a", "864")?;
+    expect("day05b", "739")?;
+    expect("day06a", "6703")?;
+    expect("day06b", "3430")?;
+    expect("day07", "261\n3765")?;
+    expect("day08", "1818\n631")?;
+    expect("day09", "731031916\n93396727")?;
     expect("day10", "2368\n1727094849536")?;
     expect("day11", "2275\n2121")?;
     expect("day12", "590\n42013")?;
