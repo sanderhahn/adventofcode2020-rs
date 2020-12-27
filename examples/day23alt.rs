@@ -1,103 +1,188 @@
-// Every cup has a unique label and you only need to keep track of the cup next to it.
-// The circle of cups can be stored as an array of cup label to next cup label.
-// The current pointer uses the cup label instead of a position.
+use std::{collections::HashMap, io};
 
-fn decr(label: &mut usize, num_cups: usize) {
-    if *label > 1 {
-        *label -= 1;
-    } else {
-        *label = num_cups;
-    }
+pub fn enter() {
+    let mut input = String::new();
+    io::stdin().read_line(&mut input).unwrap();
 }
 
-fn game(input: &str, num_cups: usize, num_moves: usize) -> Vec<usize> {
-    let mut next_cup: Vec<usize> = vec![0; num_cups+1];
-    for i in 1..=num_cups {
-        next_cup[i] = i+1;
+#[derive(Debug)]
+struct Item {
+    num: usize,
+    next: usize,
+}
+
+#[derive(Debug)]
+struct Ring {
+    current: usize,
+    items: Vec<Item>,
+    empty: Vec<usize>,
+    map: HashMap<usize, usize>,
+}
+
+impl Ring {
+    fn new(num: usize) -> Self {
+        let mut map = HashMap::new();
+        map.insert(num, 0);
+        Self {
+            current: 0,
+            items: vec![Item { num, next: 0 }],
+            empty: vec![],
+            map,
+        }
     }
-    next_cup[num_cups] = 1;
 
-    let init: Vec<usize> = input.chars().map(|c| {
-        c.to_digit(10).unwrap() as usize
-    }).collect();
+    #[allow(dead_code)]
+    fn print(&self) {
+        print!("cups:");
+        let mut here = self.current;
+        loop {
+            if here == self.current {
+                print!(" ({})", self.items[here].num);
+            } else {
+                print!(" {}", self.items[here].num);
+            }
+            here = self.items[here].next;
+            if here == self.current {
+                break;
+            }
+        }
+        println!()
+    }
 
-    for i in 0..init.len() {
-        let cup = init[i];
-        let next = if i < init.len()-1 {
-            init[i+1]
+    fn current_num(&self) -> usize {
+        self.items[self.current].num
+    }
+
+    fn insert_right(&mut self, num: usize) {
+        let other = self.items[self.current].next;
+        if let Some(unused) = self.empty.pop() {
+            self.items[self.current].next = unused;
+            self.map.insert(num, unused);
+            self.items[unused].num = num;
+            self.items[unused].next = other;
         } else {
-            init.len()+1
-        };
-        next_cup[cup] = next;
+            let pos = self.items.len();
+            self.map.insert(num, pos);
+            self.items[self.current].next = pos;
+            self.items.push(Item { num, next: other });
+        }
     }
-    if init.len() < num_cups {
-        next_cup[num_cups] = init[0];
+
+    fn next(&mut self) {
+        self.current = self.items[self.current].next
+    }
+
+    fn remove_right(&mut self) -> usize {
+        let removal = self.items[self.current].next;
+        self.items[self.current].next = self.items[removal].next;
+        self.empty.push(removal);
+        let num = self.items[removal].num;
+        self.map.remove(&num);
+        self.items[removal].next = std::usize::MAX;
+        num
+    }
+
+    fn lookup(&mut self, num: usize) {
+        if let Some(position) = self.map.get(&num) {
+            self.current = *position;
+        } else {
+            panic!("error lookup {}", num);
+        }
+    }
+}
+
+fn decr(num: usize, max_cups: usize) -> usize {
+    if num > 1 {
+        num - 1
     } else {
-        next_cup[*init.last().unwrap()] = init[0];
+        max_cups
     }
-    // dbg!(&init);
+}
 
-    fn print(mut current: usize, next_cup: &Vec<usize>) {
-        print!("cups: ({})", &current);
-        for _ in 1..next_cup.len() {
-            current = next_cup[current];
-            print!(" {}", &current);
-        }
-        println!();
+fn char_to_num(char: char) -> usize {
+    char.to_digit(10).unwrap() as usize
+}
+
+fn day23(input: &str, max_cups: usize, max_moves: usize) -> String {
+    let mut iter = input.chars().rev();
+
+    let num = char_to_num(iter.next().unwrap());
+    let mut ring = Ring::new(num);
+
+    let mut start = num;
+
+    for char in iter {
+        let num = char_to_num(char);
+        start = start.max(num);
+        ring.insert_right(num);
     }
-
-    let mut current = init[0];
-    for _m in 1..=num_moves {
-        // println!("move {}", _m);
-        // print(current, &next_cup);
-
-        let mut dest = current;
-        decr(&mut dest, num_cups);
-        let pick1 = next_cup[current];
-        let pick2 = next_cup[pick1];
-        let pick3 = next_cup[pick2];
-        while dest == pick1 || dest == pick2 || dest == pick3 {
-            decr(&mut dest, num_cups);
+    if max_cups > start {
+        for num in (start + 1..=max_cups).rev() {
+            ring.insert_right(num);
         }
+        ring.lookup(max_cups);
+    }
+    ring.next();
+
+    for _m in 1..=max_moves {
+        // if _m % (max_moves / 10) == 0 {
+        //     println!("-- move {} --", _m);
+        // }
+        // ring.print();
+        let pick1 = ring.remove_right();
+        let pick2 = ring.remove_right();
+        let pick3 = ring.remove_right();
         // println!("pick up: {}, {}, {}", pick1, pick2, pick3);
-        // println!("destination: {}", dest);
-        next_cup[current] = next_cup[pick3];
-        next_cup[pick3] = pick1;
-        let navigation = next_cup[current];
+        // ring.print();
+        let current = ring.current_num();
+        // println!("current: {}", current);
+        let mut destination = decr(current, max_cups);
+        while destination == pick1 || destination == pick2 || destination == pick3 {
+            destination = decr(destination, max_cups)
+        }
+        // println!("destination: {}", destination);
 
-        let tmp = next_cup[dest];
-        next_cup[dest] = pick1;
-        next_cup[pick3] = tmp;
+        let safepoint = ring.current;
+        // dbg!(pick3,pick2,pick1);
+        ring.lookup(destination);
+        ring.insert_right(pick3);
+        ring.insert_right(pick2);
+        ring.insert_right(pick1);
+        ring.current = safepoint;
+        ring.next();
 
-        current = navigation;
+        // enter();
     }
-    next_cup
-}
 
-fn day23a(input: &str) -> usize {
-    let next_cup = game(input, 9, 100);
-    let mut current = 1;
-    let mut num = 0;
-    for _ in 1..next_cup.len()-1 {
-        current = next_cup[current];
-        num *= 10;
-        num += current;
+    ring.lookup(1);
+    ring.next();
+
+    if max_cups <= 9 {
+        // part 1
+        let mut result = vec![];
+        for _ in 1..9 {
+            result.push(ring.current_num());
+            ring.next();
+        }
+        result.iter().map(|&num| format!("{}", num)).collect()
+    } else {
+        // part 2
+        let cup1 = ring.current_num();
+        ring.next();
+        let cup2 = ring.current_num();
+        format!("{}", cup1 * cup2)
     }
-    num
-}
-
-fn day23b(input: &str) -> usize {
-    let next_cup = game(input, 1000000, 10000000);
-    let cup1 = next_cup[1];
-    let cup2 = next_cup[cup1];
-    cup1 * cup2
 }
 
 fn main() {
     let example = "389125467";
-    assert_eq!(67384529, day23a(example));
-    println!("{}", day23a("716892543"));
+    assert_eq!("67384529", day23(example, 9, 100));
 
-    assert_eq!(149245887792, day23b(example));
-    println!("{}", day23b("716892543"));
+    println!("{}", day23("716892543", 9, 100));
+
+    const MAX_CUPS: usize = 1000000;
+    const MAX_MOVES: usize = 10000000;
+
+    assert_eq!("149245887792", day23(example, MAX_CUPS, MAX_MOVES));
+    println!("{}", day23("716892543", MAX_CUPS, MAX_MOVES));
 }
